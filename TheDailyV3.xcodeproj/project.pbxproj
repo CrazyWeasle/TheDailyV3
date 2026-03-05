@@ -10,9 +10,24 @@
 		F8963BF82F59E571000959BF /* TheDailyV3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TheDailyV3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		F8963C432F5A0A46000959BF /* Exceptions for "TheDailyV3" folder in "TheDailyV3" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Models/GEMINI.md,
+				Views/Calendar/GEMINI.md,
+				Views/Report/GEMINI.md,
+			);
+			target = F8963BF72F59E571000959BF /* TheDailyV3 */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F8963BFA2F59E571000959BF /* TheDailyV3 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				F8963C432F5A0A46000959BF /* Exceptions for "TheDailyV3" folder in "TheDailyV3" target */,
+			);
 			path = TheDailyV3;
 			sourceTree = "<group>";
 		};

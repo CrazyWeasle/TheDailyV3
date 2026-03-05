@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct TheDailyV3App: App {
@@ -13,5 +14,6 @@ struct TheDailyV3App: App {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(for: [DailyReport.self, CustomImageMetadata.self])
     }
 }

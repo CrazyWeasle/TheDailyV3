@@ -1,24 +1,49 @@
-//
-//  ContentView.swift
-//  TheDailyV3
-//
-//  Created by Joe Jarriel on 3/5/26.
-//
-
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var selectedReport: DailyReport?
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationSplitView(columnVisibility: $columnVisibility) {
+            List {
+                NavigationLink {
+                    CalendarView(selectedReport: $selectedReport)
+                        .navigationTitle("Calendar")
+                } label: {
+                    Label("Calendar", systemImage: "calendar")
+                }
+                
+                NavigationLink {
+                    if let selectedReport {
+                        CounterListView(report: selectedReport)
+                            .navigationTitle("Counters")
+                    } else {
+                        ContentUnavailableView(
+                            "No Report Selected",
+                            systemImage: "calendar.badge.exclamationmark",
+                            description: Text("Please select a date from the calendar to manage its counters.")
+                        )
+                    }
+                } label: {
+                    Label("Counters", systemImage: "number")
+                }
+            }
+            .navigationTitle("The Daily")
+        } content: {
+            Text("Select a date from the calendar")
+        } detail: {
+            if let selectedReport {
+                ReportFormView(report: selectedReport)
+            } else {
+                Text("Select a report")
+            }
         }
-        .padding()
     }
 }
 
 #Preview {
     ContentView()
+        .modelContainer(for: [DailyReport.self], inMemory: true)
 }
