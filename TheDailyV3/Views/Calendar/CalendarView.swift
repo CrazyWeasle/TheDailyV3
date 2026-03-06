@@ -48,11 +48,8 @@ struct CalendarView: View {
             CalendarGridView(
                 datesInMonth: datesInMonth,
                 selectedMonth: selectedMonth,
-                selectedDate: selectedDate,
-                onSelect: { date, report in
-                    selectedDate = date
-                    handleDateSelection(date, existingReport: report)
-                }
+                selectedDate: $selectedDate,
+                selectedReport: $selectedReport
             )
             
             Spacer()
@@ -102,16 +99,6 @@ struct CalendarView: View {
         
         await MainActor.run {
             self.datesInMonth = dates
-        }
-    }
-    
-    private func handleDateSelection(_ date: Date, existingReport: DailyReport?) {
-        if let existingReport {
-            selectedReport = existingReport
-        } else {
-            let newReport = DailyReport(timestamp: date)
-            modelContext.insert(newReport)
-            selectedReport = newReport
         }
     }
 }

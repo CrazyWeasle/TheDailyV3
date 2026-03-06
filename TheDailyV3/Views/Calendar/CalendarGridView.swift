@@ -7,16 +7,16 @@ struct CalendarGridView: View {
     
     let datesInMonth: [Date]
     let selectedMonth: Date
-    let selectedDate: Date?
-    let onSelect: (Date, DailyReport?) -> Void
+    @Binding var selectedDate: Date?
+    @Binding var selectedReport: DailyReport?
     
     private let calendar = Calendar.current
     
-    init(datesInMonth: [Date], selectedMonth: Date, selectedDate: Date?, onSelect: @escaping (Date, DailyReport?) -> Void) {
+    init(datesInMonth: [Date], selectedMonth: Date, selectedDate: Binding<Date?>, selectedReport: Binding<DailyReport?>) {
         self.datesInMonth = datesInMonth
         self.selectedMonth = selectedMonth
-        self.selectedDate = selectedDate
-        self.onSelect = onSelect
+        self._selectedDate = selectedDate
+        self._selectedReport = selectedReport
         
         // Predicate for the month
         guard let monthInterval = calendar.dateInterval(of: .month, for: selectedMonth) else {
@@ -41,15 +41,62 @@ struct CalendarGridView: View {
                     return report.isSent ? .sent : .draft
                 }()
                 
-                DateCell(
-                    date: date,
-                    status: status,
-                    isSelected: calendar.isDate(date, inSameDayAs: selectedDate ?? Date.distantPast),
-                    isCurrentMonth: calendar.isDate(date, equalTo: selectedMonth, toGranularity: .month)
-                )
-                .onTapGesture {
-                    onSelect(date, report)
+                NavigationLink {
+                    ReportDestinationView(date: date, selectedReport: $selectedReport)
+                        .onAppear {
+                            selectedDate = date
+                        }
+                } label: {
+                    DateCell(
+                        date: date,
+                        status: status,
+                        isSelected: calendar.isDate(date, inSameDayAs: selectedDate ?? Date.distantPast),
+                        isCurrentMonth: calendar.isDate(date, equalTo: selectedMonth, toGranularity: .month)
+                    )
                 }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+struct ReportDestinationView: View {
+    let date: Date
+    @Binding var selectedReport: DailyReport?
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var reports: [DailyReport]
+    
+    init(date: Date, selectedReport: Binding<DailyReport?>) {
+        self.date = date
+        self._selectedReport = selectedReport
+        
+        let calendar = Calendar.current
+        let start = calendar.startOfDay(for: date)
+        let end = calendar.date(byAdding: .day, value: 1, to: start)!
+        
+        _reports = Query(filter: #Predicate<DailyReport> {
+            $0.timestamp >= start && $0.timestamp < end
+        })
+    }
+    
+    var body: some View {
+        Group {
+            if let report = reports.first {
+                ReportFormView(report: report)
+                    .onAppear {
+                        // Only update if it's different to avoid redundant state updates
+                        if selectedReport?.id != report.id {
+                            selectedReport = report
+                        }
+                    }
+            } else {
+                ProgressView()
+                    .onAppear {
+                        let newReport = DailyReport(timestamp: date)
+                        modelContext.insert(newReport)
+                        // SwiftData will save, @Query will refresh, and the UI will navigate to the report
+                    }
             }
         }
     }
