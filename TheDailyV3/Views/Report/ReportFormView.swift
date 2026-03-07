@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct ReportFormView: View {
     @Environment(\.modelContext) private var modelContext
@@ -7,6 +8,8 @@ struct ReportFormView: View {
     @Query private var allEvents: [ReportEvent]
     @State private var showingMessageSheet = false
     @State private var showingPreviewSheet = false
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedImageData: Data?
 
     var isSendable: Bool {
         !report.mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -17,32 +20,44 @@ struct ReportFormView: View {
             Section {
                 // Media Section
                 VStack(alignment: .leading, spacing: 12) {
-                    if let mediaIdentifier = report.mediaIdentifier {
-                        // Visual container for media
-                        Rectangle()
-                            .fill(Color.secondary.opacity(0.2))
-                            .frame(height: 200)
-                            .overlay(
-                                Text("Media ID: \(mediaIdentifier)")
-                                    .foregroundColor(.secondary)
-                            )
+                    if let imageData = selectedImageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 200)
                             .cornerRadius(8)
+                    } else if let mediaIdentifier = report.mediaIdentifier,
+                              let data = MediaService.shared.loadMedia(identifier: mediaIdentifier),
+                              let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 200)
+                            .cornerRadius(8)
+                            .onAppear {
+                                selectedImageData = data
+                            }
                     } else {
                         Rectangle()
                             .fill(Color.secondary.opacity(0.1))
                             .frame(height: 200)
                             .overlay(
-                                Text("No Image")
+                                Text(report.mediaIdentifier == nil ? "No Image" : "Image Not Found")
                                     .foregroundColor(.secondary)
                             )
                             .cornerRadius(8)
                     }
                     
                     if !report.isSent {
-                        Button("Simulate Picking Photo") {
-                            simulatePickingPhoto()
+                        PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                            Label(report.mediaIdentifier == nil ? "Add Photo" : "Change Photo", systemImage: "photo")
                         }
                         .padding(.vertical, 4)
+                        .onChange(of: selectedPhotoItem) { _, newItem in
+                            Task {
+                                await handlePhotoSelection(newItem)
+                            }
+                        }
                     }
 
                     TextField("Add a caption...", text: Binding(
@@ -214,18 +229,31 @@ struct ReportFormView: View {
         try? modelContext.save()
     }
     
-    private func simulatePickingPhoto() {
-        let newAssetID = UUID().uuidString
-        report.mediaIdentifier = newAssetID
+    private func handlePhotoSelection(_ item: PhotosPickerItem?) async {
+        guard let item = item else { return }
+        guard let data = try? await item.loadTransferable(type: Data.self) else { return }
         
-        // Find or create CustomImageMetadata to increment usage count
-        let descriptor = FetchDescriptor<CustomImageMetadata>(predicate: #Predicate { $0.assetID == newAssetID })
-        if let existingMetadata = try? modelContext.fetch(descriptor).first {
-            existingMetadata.usageCount += 1
-            existingMetadata.lastUsed = Date()
-        } else {
-            let newMetadata = CustomImageMetadata(assetID: newAssetID, source: "CustomStore")
-            modelContext.insert(newMetadata)
+        let newAssetID = UUID().uuidString
+        
+        do {
+            try MediaService.shared.saveMedia(data: data, identifier: newAssetID)
+            
+            await MainActor.run {
+                selectedImageData = data
+                report.mediaIdentifier = newAssetID
+                report.mediaType = "image"
+                
+                let descriptor = FetchDescriptor<CustomImageMetadata>(predicate: #Predicate { $0.assetID == newAssetID })
+                if let existingMetadata = try? modelContext.fetch(descriptor).first {
+                    existingMetadata.usageCount += 1
+                    existingMetadata.lastUsed = Date()
+                } else {
+                    let newMetadata = CustomImageMetadata(assetID: newAssetID, source: "CustomStore")
+                    modelContext.insert(newMetadata)
+                }
+            }
+        } catch {
+            print("Failed to save media: \(error)")
         }
     }
 }
@@ -273,6 +301,17 @@ struct ReportPreviewSheet: View {
                     Text("This is how your report will appear in Messages:")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+
+                    if let mediaIdentifier = report.mediaIdentifier,
+                       let data = MediaService.shared.loadMedia(identifier: mediaIdentifier),
+                       let uiImage = UIImage(data: data) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxWidth: .infinity)
+                            .cornerRadius(12)
+                            .shadow(radius: 2)
+                    }
                     
                     Text(previewText)
                         .font(.system(.body, design: .monospaced))
