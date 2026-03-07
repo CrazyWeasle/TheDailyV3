@@ -15,6 +15,7 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Models/GEMINI.md,
+				Services/SendReport/GEMINI.md,
 				Views/Calendar/GEMINI.md,
 				Views/Counters/GEMINI.md,
 				Views/Events/GEMINI.md,

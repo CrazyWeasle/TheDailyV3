@@ -6,6 +6,7 @@ struct ReportFormView: View {
     @Bindable var report: DailyReport
     @Query private var allEvents: [ReportEvent]
     @State private var showingMessageSheet = false
+    @State private var showingPreviewSheet = false
 
     var isSendable: Bool {
         !report.mealDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -101,22 +102,6 @@ struct ReportFormView: View {
                 }
             }
 
-            Section("Activities") {
-                ZStack(alignment: .topLeading) {
-                    TextEditor(text: $report.dailyActivities)
-                        .frame(minHeight: 100)
-                    
-                    if report.dailyActivities.isEmpty {
-                        Text("Describe your activities...")
-                            .foregroundColor(Color.gray.opacity(0.6))
-                            .padding(.top, 8)
-                            .padding(.leading, 5)
-                            .allowsHitTesting(false)
-                    }
-                }
-                .disabled(report.isSent)
-            }
-
             if !report.eventSummaries.isEmpty || !report.isSent {
                 Section("Events") {
                     if !report.isSent {
@@ -132,21 +117,50 @@ struct ReportFormView: View {
                     }
                 }
             }
+
+            Section("Activities") {
+                ZStack(alignment: .topLeading) {
+                    TextEditor(text: $report.dailyActivities)
+                        .frame(minHeight: 100)
+                    
+                    if report.dailyActivities.isEmpty {
+                        Text("Describe your activities...")
+                            .foregroundColor(Color.gray.opacity(0.6))
+                            .padding(.top, 8)
+                            .padding(.leading, 5)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .disabled(report.isSent)
+            }
         }
         .navigationTitle("Report Form")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if !report.isSent {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Send Report") {
-                        presentMessageSheet()
+                    HStack(spacing: 16) {
+                        Button {
+                            showingPreviewSheet = true
+                        } label: {
+                            Label("Preview", systemImage: "eye")
+                        }
+                        
+                        Button("Send Report") {
+                            presentMessageSheet()
+                        }
+                        .disabled(!isSendable)
                     }
-                    .disabled(!isSendable)
                 }
             }
         }
         .sheet(isPresented: $showingMessageSheet) {
-            MessageComposeSheet(isSent: $report.isSent)
+            ReportMessageComposeView(reportDate: report.timestamp) { result in
+                showingMessageSheet = false
+            }
+        }
+        .sheet(isPresented: $showingPreviewSheet) {
+            ReportPreviewSheet(report: report)
         }
         .onDisappear {
             saveChanges()
@@ -216,40 +230,69 @@ struct ReportFormView: View {
     }
 }
 
-struct MessageComposeSheet: View {
+struct ReportPreviewSheet: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var isSent: Bool
+    let report: DailyReport
+    
+    var previewText: String {
+        var components: [String] = []
+        
+        if let caption = report.mediaCaption {
+            components.append(caption)
+            components.append("")
+        }
+        
+        if !report.mealDescription.isEmpty {
+            components.append(report.mealDescription)
+            components.append("")
+        }
+        
+        if !report.counterSummaries.isEmpty {
+            components.append(contentsOf: report.counterSummaries)
+        }
+        
+        if !report.eventSummaries.isEmpty {
+            components.append(contentsOf: report.eventSummaries)
+        }
+        
+        if !report.counterSummaries.isEmpty || !report.eventSummaries.isEmpty {
+            components.append("")
+        }
+        
+        if !report.dailyActivities.isEmpty {
+            components.append(report.dailyActivities)
+        }
+        
+        return components.joined(separator: "\n")
+    }
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 20) {
-                Text("Simulating Message Compose Sheet")
-                    .font(.headline)
-                
-                Button("Simulate Send Success") {
-                    completeMessageSend()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("This is how your report will appear in Messages:")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text(previewText)
+                        .font(.system(.body, design: .monospaced))
+                        .padding()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.secondary.opacity(0.1))
+                        .cornerRadius(12)
                 }
-                .buttonStyle(.borderedProminent)
-                
-                Button("Cancel") {
-                    dismiss()
-                }
+                .padding()
             }
-            .navigationTitle("New Message")
+            .navigationTitle("Report Preview")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
                         dismiss()
                     }
                 }
             }
         }
     }
-    
-    @MainActor
-    private func completeMessageSend() {
-        isSent = true
-        dismiss()
-    }
 }
+
