@@ -16,6 +16,7 @@
 			membershipExceptions = (
 				Models/GEMINI.md,
 				Services/SendReport/GEMINI.md,
+				Services/Settings/GEMINI.md,
 				Views/Calendar/GEMINI.md,
 				Views/Counters/GEMINI.md,
 				Views/Events/GEMINI.md,

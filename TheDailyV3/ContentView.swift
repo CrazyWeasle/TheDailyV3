@@ -6,6 +6,7 @@ enum SidebarItem: Hashable {
     case counters
     case events
     case gallery
+    case settings
 }
 
 struct ContentView: View {
@@ -30,6 +31,10 @@ struct ContentView: View {
                 
                 NavigationLink(value: SidebarItem.gallery) {
                     Label("Gallery", systemImage: "photo.on.rectangle")
+                }
+                
+                NavigationLink(value: SidebarItem.settings) {
+                    Label("Settings", systemImage: "gear")
                 }
             }
             .navigationTitle("The Daily")
@@ -63,6 +68,8 @@ struct ContentView: View {
             case .gallery:
                 Text("Image Gallery placeholder")
                     .navigationTitle("Gallery")
+            case .settings:
+                SettingsView()
             }
         } detail: {
             if let selectedReport {

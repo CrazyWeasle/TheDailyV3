@@ -22,6 +22,7 @@ struct DateCell: View {
     let status: ReportStatus
     let isSelected: Bool
     let isCurrentMonth: Bool
+    var isFuture: Bool = false
     
     var body: some View {
         VStack {
@@ -54,6 +55,9 @@ struct DateCell: View {
     }
     
     private var foregroundForStatus: Color {
+        if isFuture {
+            return .secondary.opacity(0.5)
+        }
         if !isCurrentMonth {
             return .secondary
         }

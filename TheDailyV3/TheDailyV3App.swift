@@ -14,6 +14,6 @@ struct TheDailyV3App: App {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(for: [DailyReport.self, CustomImageMetadata.self])
+        .modelContainer(for: [DailyReport.self, CustomImageMetadata.self, Contact.self])
     }
 }

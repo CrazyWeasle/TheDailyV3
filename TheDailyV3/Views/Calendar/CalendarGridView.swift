@@ -40,6 +40,7 @@ struct CalendarGridView: View {
                     guard let report = report else { return .none }
                     return report.isSent ? .sent : .draft
                 }()
+                let isFuture = calendar.startOfDay(for: date) > calendar.startOfDay(for: Date())
                 
                 NavigationLink {
                     ReportDestinationView(date: date, selectedReport: $selectedReport)
@@ -51,10 +52,12 @@ struct CalendarGridView: View {
                         date: date,
                         status: status,
                         isSelected: calendar.isDate(date, inSameDayAs: selectedDate ?? Date.distantPast),
-                        isCurrentMonth: calendar.isDate(date, equalTo: selectedMonth, toGranularity: .month)
+                        isCurrentMonth: calendar.isDate(date, equalTo: selectedMonth, toGranularity: .month),
+                        isFuture: isFuture
                     )
                 }
                 .buttonStyle(.plain)
+                .disabled(isFuture)
             }
         }
     }

@@ -24,6 +24,16 @@ struct ReportMessageComposeView: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: MFMessageComposeViewController, context: Context) {}
     
     private func configureMessage(_ controller: MFMessageComposeViewController) {
+        // Fetch Default Contact
+        let contactDescriptor = FetchDescriptor<Contact>(
+            predicate: #Predicate<Contact> { contact in
+                contact.isDefault == true
+            }
+        )
+        if let defaultContact = try? modelContext.fetch(contactDescriptor).first {
+            controller.recipients = [defaultContact.phoneNumber]
+        }
+        
         // 1. Fetch the report
         let startOfDay = Calendar.current.startOfDay(for: reportDate)
         let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
