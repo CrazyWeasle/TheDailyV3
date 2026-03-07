@@ -29,6 +29,21 @@ struct ContentView: View {
                 } label: {
                     Label("Counters", systemImage: "number")
                 }
+                
+                NavigationLink {
+                    if let selectedReport {
+                        EventListView(report: selectedReport)
+                            .navigationTitle("Events")
+                    } else {
+                        ContentUnavailableView(
+                            "No Report Selected",
+                            systemImage: "calendar.badge.exclamationmark",
+                            description: Text("Please select a date from the calendar to manage its events.")
+                        )
+                    }
+                } label: {
+                    Label("Events", systemImage: "flag")
+                }
             }
             .navigationTitle("The Daily")
         } content: {

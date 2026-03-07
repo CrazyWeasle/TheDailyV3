@@ -16,6 +16,8 @@
 			membershipExceptions = (
 				Models/GEMINI.md,
 				Views/Calendar/GEMINI.md,
+				Views/Counters/GEMINI.md,
+				Views/Events/GEMINI.md,
 				Views/Report/GEMINI.md,
 			);
 			target = F8963BF72F59E571000959BF /* TheDailyV3 */;

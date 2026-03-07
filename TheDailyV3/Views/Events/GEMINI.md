@@ -12,7 +12,7 @@ This folder manages the lifecycle of **Events** for **TheDailyV3**. Events are d
     * `isAnniversary`: Bool (Determines if the event should automatically resurface annually).
     * `isActive`: Bool (Persistence flag to include the event in current and subsequent reports).
 * **Computed Property: `reportLine`**
-    * **Format**: Returns a string as `"[title]: [interval] [since/until]"`.
+    * **Format**: Returns a string as `"[interval] [since/until] [title]"`.
     * **Interval Logic**: Must show precise years, months, and days.
     * **Omission Rule**: If years or months are zero, they must be omitted from the string (e.g., "5 days since" instead of "0 years, 0 months, and 5 days since").
 

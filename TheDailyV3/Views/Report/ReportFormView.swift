@@ -4,6 +4,7 @@ import SwiftData
 struct ReportFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var report: DailyReport
+    @Query private var allEvents: [ReportEvent]
     @State private var showingMessageSheet = false
 
     var isSendable: Bool {
@@ -116,12 +117,18 @@ struct ReportFormView: View {
                 .disabled(report.isSent)
             }
 
-            if !report.eventSummaries.isEmpty {
+            if !report.eventSummaries.isEmpty || !report.isSent {
                 Section("Events") {
-                    List {
-                        ForEach(report.eventSummaries, id: \.self) { summary in
-                            Text(summary)
+                    if !report.isSent {
+                        NavigationLink {
+                            EventListView(report: report)
+                        } label: {
+                            Label("Edit Events", systemImage: "flag.circle")
                         }
+                    }
+                    
+                    ForEach(report.eventSummaries, id: \.self) { summary in
+                        Text(summary)
                     }
                 }
             }
@@ -143,6 +150,44 @@ struct ReportFormView: View {
         }
         .onDisappear {
             saveChanges()
+        }
+        .onAppear {
+            updateEventSummaries()
+        }
+    }
+    
+    private func updateEventSummaries() {
+        if report.isSent { return }
+        
+        let calendar = Calendar.current
+        let reportDate = report.timestamp
+        let reportMonth = calendar.component(.month, from: reportDate)
+        let reportDay = calendar.component(.day, from: reportDate)
+        
+        var newSummaries: [String] = []
+        var activeEvents: [ReportEvent] = []
+        
+        for event in allEvents {
+            var shouldInclude = event.isActive
+            
+            if !shouldInclude && event.isAnniversary {
+                let eventMonth = calendar.component(.month, from: event.targetDate)
+                let eventDay = calendar.component(.day, from: event.targetDate)
+                if eventMonth == reportMonth && eventDay == reportDay {
+                    shouldInclude = true
+                }
+            }
+            
+            if shouldInclude {
+                newSummaries.append(event.reportLine(for: reportDate))
+                activeEvents.append(event)
+            }
+        }
+        
+        if report.eventSummaries != newSummaries {
+            report.eventSummaries = newSummaries
+            report.events = activeEvents
+            try? modelContext.save()
         }
     }
     

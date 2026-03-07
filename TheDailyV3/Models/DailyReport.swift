@@ -17,7 +17,7 @@ final class DailyReport {
     var mediaCaption: String?
     var mediaType: String?
     
-    @Relationship(deleteRule: .cascade) var events: [ReportEvent]? = []
+    @Relationship var events: [ReportEvent]? = []
     @Relationship var counters: [ReportCounter]? = []
     
     init(timestamp: Date = Date()) {
