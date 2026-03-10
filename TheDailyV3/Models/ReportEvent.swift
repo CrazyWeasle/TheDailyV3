@@ -9,6 +9,8 @@ final class ReportEvent {
     var isAnniversary: Bool = false
     var isActive: Bool = false
     
+    var reports: [DailyReport]? = []
+    
     init(title: String = "", targetDate: Date = Date(), isAnniversary: Bool = false, isActive: Bool = true) {
         self.id = UUID()
         self.title = title

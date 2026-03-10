@@ -9,6 +9,8 @@ final class ReportCounter {
     @Relationship(deleteRule: .cascade, inverse: \CounterIncrement.counter)
     var history: [CounterIncrement]? = []
     
+    var reports: [DailyReport]? = []
+    
     init(name: String = "") {
         self.id = UUID()
         self.name = name

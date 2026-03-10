@@ -17,8 +17,8 @@ final class DailyReport {
     var mediaCaption: String?
     var mediaType: String?
     
-    @Relationship var events: [ReportEvent]? = []
-    @Relationship var counters: [ReportCounter]? = []
+    @Relationship(inverse: \ReportEvent.reports) var events: [ReportEvent]? = []
+    @Relationship(inverse: \ReportCounter.reports) var counters: [ReportCounter]? = []
     
     init(timestamp: Date = Date()) {
         self.id = UUID()
