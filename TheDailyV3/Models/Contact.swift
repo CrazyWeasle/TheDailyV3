@@ -2,7 +2,7 @@ import SwiftData
 import Foundation
 
 @Model
-class Contact {
+final class Contact {
     var name: String = ""
     var phoneNumber: String = ""
     var isDefault: Bool = false
