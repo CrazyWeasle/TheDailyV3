@@ -1,8 +1,7 @@
 import SwiftUI
 import SwiftData
 
-struct CalendarGridView: View {
-    @Environment(\.modelContext) private var modelContext
+struct MonthQueryView: View {
     @Query private var reports: [DailyReport]
     
     let datesInMonth: [Date]
@@ -10,15 +9,13 @@ struct CalendarGridView: View {
     @Binding var selectedDate: Date?
     @Binding var selectedReport: DailyReport?
     
-    private let calendar = Calendar.current
-    
     init(datesInMonth: [Date], selectedMonth: Date, selectedDate: Binding<Date?>, selectedReport: Binding<DailyReport?>) {
         self.datesInMonth = datesInMonth
         self.selectedMonth = selectedMonth
         self._selectedDate = selectedDate
         self._selectedReport = selectedReport
         
-        // Predicate for the month
+        let calendar = Calendar.current
         guard let monthInterval = calendar.dateInterval(of: .month, for: selectedMonth) else {
             _reports = Query()
             return
@@ -33,6 +30,26 @@ struct CalendarGridView: View {
     }
     
     var body: some View {
+        CalendarGridView(
+            reports: reports,
+            datesInMonth: datesInMonth,
+            selectedMonth: selectedMonth,
+            selectedDate: $selectedDate,
+            selectedReport: $selectedReport
+        )
+    }
+}
+
+struct CalendarGridView: View {
+    let reports: [DailyReport]
+    let datesInMonth: [Date]
+    let selectedMonth: Date
+    @Binding var selectedDate: Date?
+    @Binding var selectedReport: DailyReport?
+    
+    private let calendar = Calendar.current
+    
+    var body: some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 0) {
             ForEach(datesInMonth, id: \.self) { date in
                 let report = reports.first { calendar.isDate($0.timestamp, inSameDayAs: date) }
@@ -44,9 +61,6 @@ struct CalendarGridView: View {
                 
                 NavigationLink {
                     ReportDestinationView(date: date, selectedReport: $selectedReport)
-                        .onAppear {
-                            selectedDate = date
-                        }
                 } label: {
                     DateCell(
                         date: date,
@@ -57,7 +71,11 @@ struct CalendarGridView: View {
                     )
                 }
                 .buttonStyle(.plain)
-                .disabled(isFuture)
+                .simultaneousGesture(TapGesture().onEnded {
+                    if !isFuture {
+                        selectedDate = date
+                    }
+                })
             }
         }
     }
