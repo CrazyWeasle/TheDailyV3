@@ -45,7 +45,7 @@ struct CalendarView: View {
             }
             
             // Calendar Grid
-            CalendarGridView(
+            MonthQueryView(
                 datesInMonth: datesInMonth,
                 selectedMonth: selectedMonth,
                 selectedDate: $selectedDate,
