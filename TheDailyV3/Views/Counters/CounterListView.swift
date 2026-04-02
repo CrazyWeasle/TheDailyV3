@@ -32,9 +32,14 @@ struct CounterListView: View {
                         .disabled(report.isSent)
                         
                         NavigationLink(destination: CounterDetailView(counter: counter)) {
-                            Text(counter.name)
-                                .font(.headline)
-                                .foregroundColor(.primary)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(counter.name)
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                Text("Total: \(counter.count(for: report.timestamp))")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                         }
                         .buttonStyle(.plain)
                         
@@ -48,7 +53,8 @@ struct CounterListView: View {
                             .buttonStyle(.plain)
                             .disabled(report.isSent)
                             
-                            Text("\(counter.count(for: report.timestamp))")
+                            let incrementValue = counter.dailyIncrement(for: report.timestamp)
+                            Text("\(incrementValue > 0 ? "+" : "")\(incrementValue)")
                                 .frame(minWidth: 30, alignment: .center)
                                 .font(.body.monospacedDigit())
                             
@@ -61,6 +67,16 @@ struct CounterListView: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        if !report.isSent {
+                            Button(role: .destructive) {
+                                resetCounterToZero(counter)
+                            } label: {
+                                Label("Zero", systemImage: "0.circle")
+                            }
+                            .tint(.orange)
+                        }
+                    }
                 }
             }
         }
@@ -145,6 +161,17 @@ struct CounterListView: View {
             toggleActive(for: counter)
         } else {
             updateReportSummaries()
+        }
+    }
+    
+    @MainActor
+    private func resetCounterToZero(_ counter: ReportCounter) {
+        guard !report.isSent else { return }
+        
+        let currentTotal = counter.count(for: report.timestamp)
+        if currentTotal != 0 {
+            // Add a negative increment equal to the current total to force the sum to 0
+            recordIncrement(counter, value: -currentTotal)
         }
     }
     

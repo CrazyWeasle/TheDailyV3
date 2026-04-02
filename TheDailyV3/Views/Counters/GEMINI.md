@@ -20,7 +20,9 @@ This folder manages the lifecycle of **Counters**. These are persistent entities
     * **Rule:** If the starting value is non-zero, it must be saved as a `CounterIncrement`. The `timestamp` for this initial increment MUST be set to the **start of the currently selected report's day**.
 * **The Editor Interface:**
     * Provide a +/- interface for each counter.
-    * **Feature Change:** The interface should also provide the **cumulative value to date** for each counter. "To date" refers strictly to all activity up to the end of the day of the selected report (not the current system time).
+    * **Feature Change (Daily Increment):** The center label between the +/- buttons must show the **daily increment** (e.g., +2 or -1) for the currently selected report's day. Tapping the buttons immediately updates this daily total.
+    * **Feature Change (Cumulative Display):** The **cumulative value to date** must be displayed underneath the counter's name. "To date" refers strictly to all activity up to the end of the day of the selected report.
+    * **Feature Change (Reset to Zero):** Users must be able to swipe right-to-left on a counter row to reveal a "Zero" (Reset) action. This automatically injects a neutralizing `CounterIncrement` (timestamped to the report's date) to force the cumulative total to `0`.
     * Support negative values (counters are not restricted to positive integers).
 * **Selection for Report:**
     * Users must be able to toggle which counters are "active" for the current `DailyReport`.

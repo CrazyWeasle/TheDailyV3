@@ -23,6 +23,16 @@ final class ReportCounter {
             .reduce(0) { $0 + $1.value } ?? 0
     }
     
+    /// Returns the sum of all increments that occurred strictly on the given calendar day
+    func dailyIncrement(for date: Date) -> Int {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: date) ?? date
+        
+        return history?.filter { $0.timestamp >= startOfDay && $0.timestamp <= endOfDay }
+            .reduce(0) { $0 + $1.value } ?? 0
+    }
+    
     /// Returns history grouped by day with daily increments and cumulative totals for graphing
     func cumulativeHistory() -> [(date: Date, dailyIncrement: Int, cumulativeTotal: Int)] {
         guard let history = history, !history.isEmpty else { return [] }
