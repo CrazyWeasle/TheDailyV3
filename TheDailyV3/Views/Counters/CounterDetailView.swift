@@ -5,7 +5,7 @@ import SwiftData
 struct CounterDetailView: View {
     let counter: ReportCounter
     
-    var historyData: [(date: Date, total: Int)] {
+    var historyData: [(date: Date, dailyIncrement: Int, cumulativeTotal: Int)] {
         counter.cumulativeHistory()
     }
     
@@ -19,7 +19,7 @@ struct CounterDetailView: View {
                         .fontWeight(.bold)
                     
                     if let lastEntry = historyData.last {
-                        Text("Current Total: \(lastEntry.total)")
+                        Text("Current Total: \(lastEntry.cumulativeTotal)")
                             .font(.title2)
                             .foregroundColor(.secondary)
                     } else {
@@ -37,29 +37,36 @@ struct CounterDetailView: View {
                         
                         Chart {
                             ForEach(historyData, id: \.date) { entry in
+                                // Daily Increment (Bar - Left Axis)
+                                BarMark(
+                                    x: .value("Date", entry.date),
+                                    y: .value("Daily Change", entry.dailyIncrement)
+                                )
+                                .foregroundStyle(Color.blue.opacity(0.4))
+                                
+                                // Cumulative Total (Line - Right Axis)
                                 LineMark(
                                     x: .value("Date", entry.date),
-                                    y: .value("Total", entry.total)
+                                    y: .value("Total", entry.cumulativeTotal)
                                 )
+                                .foregroundStyle(Color.orange)
                                 .interpolationMethod(.monotone)
                                 .symbol(Circle().strokeBorder(lineWidth: 2))
-                                
-                                AreaMark(
-                                    x: .value("Date", entry.date),
-                                    y: .value("Total", entry.total)
-                                )
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.blue.opacity(0.3), .clear],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
                             }
                         }
-                        .frame(height: 250)
+                        .frame(height: 300)
                         .chartYAxis {
-                            AxisMarks(position: .leading)
+                            // Left Axis for Bar Chart
+                            AxisMarks(position: .leading) { _ in
+                                AxisGridLine()
+                                AxisValueLabel()
+                                    .foregroundStyle(.blue)
+                            }
+                            // Right Axis for Line Chart
+                            AxisMarks(position: .trailing) { _ in
+                                AxisValueLabel()
+                                    .foregroundStyle(.orange)
+                            }
                         }
                         .chartXAxis {
                             AxisMarks(values: .stride(by: .day)) { value in
@@ -67,6 +74,25 @@ struct CounterDetailView: View {
                                 AxisValueLabel(format: .dateTime.month(.abbreviated).day())
                             }
                         }
+                        
+                        // Legend
+                        HStack(spacing: 20) {
+                            HStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color.blue.opacity(0.4))
+                                    .frame(width: 12, height: 12)
+                                Text("Daily Change")
+                                    .font(.caption)
+                            }
+                            HStack(spacing: 4) {
+                                Circle()
+                                    .stroke(Color.orange, lineWidth: 2)
+                                    .frame(width: 10, height: 10)
+                                Text("Cumulative Total")
+                                    .font(.caption)
+                            }
+                        }
+                        .padding(.top, 4)
                     }
                     .padding()
                     .background(Color.secondary.opacity(0.1))
@@ -88,10 +114,15 @@ struct CounterDetailView: View {
                     
                     ForEach(historyData.reversed(), id: \.date) { entry in
                         HStack {
-                            Text(entry.date, style: .date)
-                                .font(.body)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(entry.date, style: .date)
+                                    .font(.body)
+                                Text("Change: \(entry.dailyIncrement > 0 ? "+" : "")\(entry.dailyIncrement)")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
                             Spacer()
-                            Text("\(entry.total)")
+                            Text("\(entry.cumulativeTotal)")
                                 .font(.body.monospacedDigit())
                                 .fontWeight(.semibold)
                         }

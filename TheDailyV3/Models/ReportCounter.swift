@@ -23,17 +23,17 @@ final class ReportCounter {
             .reduce(0) { $0 + $1.value } ?? 0
     }
     
-    /// Returns history grouped by day with cumulative totals for graphing
-    func cumulativeHistory() -> [(date: Date, total: Int)] {
+    /// Returns history grouped by day with daily increments and cumulative totals for graphing
+    func cumulativeHistory() -> [(date: Date, dailyIncrement: Int, cumulativeTotal: Int)] {
         guard let history = history, !history.isEmpty else { return [] }
         
         let calendar = Calendar.current
         let sortedHistory = history.sorted { $0.timestamp < $1.timestamp }
         
         var cumulativeTotal = 0
-        var result: [(Date, Int)] = []
+        var result: [(Date, Int, Int)] = []
         
-        // Group by day and calculate cumulative total at the end of each day
+        // Group by day and calculate totals
         let grouped = Dictionary(grouping: sortedHistory) { increment in
             calendar.startOfDay(for: increment.timestamp)
         }
@@ -43,7 +43,7 @@ final class ReportCounter {
         for date in sortedDates {
             let dayTotal = grouped[date]?.reduce(0) { $0 + $1.value } ?? 0
             cumulativeTotal += dayTotal
-            result.append((date, cumulativeTotal))
+            result.append((date, dayTotal, cumulativeTotal))
         }
         
         return result
