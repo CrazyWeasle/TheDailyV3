@@ -19,14 +19,21 @@ This folder manages the lifecycle of **Counters**. These are persistent entities
 * **The Editor Interface:**
     * Provide a +/- interface for each counter.
     * Support negative values (counters are not restricted to positive integers).
-* **Selection for Report:**
+## Selection for Report:
     * Users must be able to toggle which counters are "active" for the current `DailyReport`.
-    * **Logic:** When generating the `counterSummaries` for a report, only include increments where the `CounterIncrement.timestamp` matches the `DailyReport.timestamp` (Day/Month/Year).
+    * **Logic (Persistence):** Counters show the **cumulative total** of all increments up to the end of the report's date. This ensures the value persists from day to day until manually adjusted.
+
+## History & Visualization
+* **Counter Detail View:**
+    * Tapping a counter's name in the list navigates to a detailed view.
+    * **Graph:** Displays a `LineChart` (using SwiftUI Charts) showing the cumulative total over time.
+    * **Data Grain:** History is grouped by day to show progress trends.
 
 ## Logic & Concurrency
-* **Date Matching:** Use `Calendar.current.isDate(_:inSameDayAs:)` to filter counter history for the relevant report day.
-* **Explanation (For Gemini):** * Explain how to use SwiftData's `#Predicate` to fetch only the increments relevant to a specific 24-hour window.
-    * Discuss the use of `@MainActor` for the increment functions to ensure the UI updates the "Count" label immediately.
+* **Date Matching:** Use a cumulative filter (e.g., `timestamp <= reportDate`) to calculate the current value for any given report.
+* **Explanation (For Gemini):** 
+    * Explain how to use `reduce` on the filtered history to calculate the running total.
+    * Discuss the use of `Charts` for time-series visualization.
 
 ## Implementation Notes
 * Use `HStack` with `Button` components for the +/- controls.

@@ -31,8 +31,12 @@ struct CounterListView: View {
                         .buttonStyle(.plain)
                         .disabled(report.isSent)
                         
-                        Text(counter.name)
-                            .font(.headline)
+                        NavigationLink(destination: CounterDetailView(counter: counter)) {
+                            Text(counter.name)
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                        }
+                        .buttonStyle(.plain)
                         
                         Spacer()
                         

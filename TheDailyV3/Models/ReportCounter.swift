@@ -18,8 +18,35 @@ final class ReportCounter {
     
     func count(for date: Date) -> Int {
         let calendar = Calendar.current
-        return history?.filter { calendar.isDate($0.timestamp, inSameDayAs: date) }
+        let endOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: date) ?? date
+        return history?.filter { $0.timestamp <= endOfDay }
             .reduce(0) { $0 + $1.value } ?? 0
+    }
+    
+    /// Returns history grouped by day with cumulative totals for graphing
+    func cumulativeHistory() -> [(date: Date, total: Int)] {
+        guard let history = history, !history.isEmpty else { return [] }
+        
+        let calendar = Calendar.current
+        let sortedHistory = history.sorted { $0.timestamp < $1.timestamp }
+        
+        var cumulativeTotal = 0
+        var result: [(Date, Int)] = []
+        
+        // Group by day and calculate cumulative total at the end of each day
+        let grouped = Dictionary(grouping: sortedHistory) { increment in
+            calendar.startOfDay(for: increment.timestamp)
+        }
+        
+        let sortedDates = grouped.keys.sorted()
+        
+        for date in sortedDates {
+            let dayTotal = grouped[date]?.reduce(0) { $0 + $1.value } ?? 0
+            cumulativeTotal += dayTotal
+            result.append((date, cumulativeTotal))
+        }
+        
+        return result
     }
     
     func reportLine(for date: Date) -> String {
